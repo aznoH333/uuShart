@@ -4,4 +4,6 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+async-trait = "0.1.88"
 thirtyfour = "=0.35.0"
+tokio = { version = "1.44.1", features = ["rt", "rt-multi-thread", "macros"] }
