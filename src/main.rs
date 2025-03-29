@@ -3,7 +3,7 @@ use information_gatherer::{information_gatherer::InformationGatherer, resources:
 pub mod solutions;
 pub mod problems;
 pub mod information_gatherer;
-
+pub mod selenium_wrapper;
 
 #[tokio::main]
 async fn main() {
