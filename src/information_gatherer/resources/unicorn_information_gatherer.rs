@@ -16,7 +16,7 @@ impl UnicornInformationGatherer{
 
 #[async_trait(?Send)]
 impl InformationGatherer for UnicornInformationGatherer{
-    async fn gather_information(&mut self) -> Option<Box<dyn ProblemSolver>> {
+    async fn gather_information(&mut self) -> Option<ProblemSolver> {
         if *self.information_resource.get_resource_type() != InformationResourceType::UuKit {
             return None;
         }
@@ -24,7 +24,10 @@ impl InformationGatherer for UnicornInformationGatherer{
 
         let wrapper = UnicornSeleniumWrapper::new(self.information_resource.get_resource()).await;
 
-        todo!("this");
+        let mut solver = ProblemSolver::new();
+
+
+        return Some(solver);
 
 
     }

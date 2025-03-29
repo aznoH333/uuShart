@@ -3,6 +3,7 @@ use crate::information_gatherer::{information_resource::InformationResource, inf
 
 pub struct UnicornInformationResource{
     url: String
+
 }
 
 impl InformationResource for UnicornInformationResource{

@@ -21,8 +21,6 @@ impl UnicornSeleniumWrapper{
         this.login().await;
         this.go_to_course_kit().await;
 
-        thread::sleep(time::Duration::from_secs(4));
-
         return this;
     }
 

@@ -8,12 +8,15 @@ pub mod selenium_wrapper;
 #[tokio::main]
 async fn main() {
 
-    let resource = UnicornInformationResource::new("test".to_owned());
+    let resource = UnicornInformationResource::new("https://uuapp.plus4u.net/uu-coursekit-courseg01/99923616732453117-8d5e19993bc042da8b5dd7812c93dfef/course/courseMenu".to_owned());
 
     let mut gatherer = UnicornInformationGatherer::new(Box::new(resource));
         
-    gatherer.gather_information().await;
-    println!("Hello, world!");
+    let solver = gatherer.gather_information().await.unwrap();
+
+
+
+    println!("{}", solver.to_string());
 
 
 }
