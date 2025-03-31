@@ -5,6 +5,7 @@ use thirtyfour::{error::WebDriverError, By, DesiredCapabilities, WebDriver, WebE
 
 const LOGIN_URL: &str = "https://unicornuniversity.net/en/";
 const LOGIN_BUTTON_XPATH: &str = "/html/body/div[1]/div[1]/div[2]/span/button";
+const BIG_LINK_CLASS: &str = "uu-coursekit-course-menu-block-topic-big-link"; 
 
 pub struct UnicornSeleniumWrapper{
     current_url: String,
@@ -28,8 +29,8 @@ impl UnicornSeleniumWrapper{
         self.driver.goto(LOGIN_URL).await.unwrap();
         
         
-        let log_in_button = Self::retry(async ||{return self.driver.find(By::XPath(LOGIN_BUTTON_XPATH)).await;}).await.unwrap();
-        log_in_button.click().await.unwrap();        
+        let log_in_button = Self::retry::<WebElement>(async ||{return self.driver.find(By::XPath(LOGIN_BUTTON_XPATH)).await;}, 40).await;
+        log_in_button.unwrap().click().await.unwrap();        
         println!("Login requered!");
         
         let mut a = String::new();
@@ -37,6 +38,27 @@ impl UnicornSeleniumWrapper{
 
 
     }
+
+    pub async fn get_big_links(&mut self) -> Option<Vec<WebElement>> {
+        return self.get_elements(By::ClassName(BIG_LINK_CLASS)).await;
+    }
+
+    pub async fn get_element(&mut self, by: By) -> Option<WebElement>{
+        thread::sleep(Duration::from_millis(200));
+        return Self::retry::<WebElement>(async ||{return self.driver.find(by.clone()).await;}, 100).await
+    }
+
+    pub async fn get_elements(&mut self, by: By) -> Option<Vec<WebElement>> {
+        thread::sleep(Duration::from_millis(200));
+        Self::retry::<WebElement>(async ||{return self.driver.find(by.clone()).await;}, 100).await.unwrap();
+        return Self::retry::<Vec<WebElement>>(async ||{return self.driver.find_all(by.to_owned()).await;}, 1).await
+    }
+
+    pub async fn check_if_element_exists(&mut self, by: By, wait_ms: u64) -> bool{
+        thread::sleep(Duration::from_millis(wait_ms));
+        return Self::retry::<WebElement>(async ||{return self.driver.find(by.clone()).await;}, 5).await.is_some();
+    }
+
 
     async fn go_to_course_kit(&mut self){
         self.driver.goto(self.current_url.clone()).await.unwrap();
@@ -54,38 +76,22 @@ impl UnicornSeleniumWrapper{
         driver.goto(LOGIN_URL).await.unwrap();
 
         return driver;
-        /*
-        let elem_form = driver.find(By::Id("search-form")).await.unwrap();
-    
-        // Find element from element.
-        let elem_text = elem_form.find(By::Id("searchInput")).await.unwrap();
-    
-        // Type in the search terms.
-        elem_text.send_keys("selenium").await.unwrap();
-    
-        // Click the search button.
-        let elem_button = elem_form.find(By::Css("button[type='submit']")).await.unwrap();
-        elem_button.click().await.unwrap();
-    
-        // Look for header to implicitly wait for the page to load.
-        driver.find(By::ClassName("firstHeading")).await.unwrap();
-        println!("{}", driver.title().await.unwrap());
-    
-        // Always explicitly close the browser.
-        driver.quit().await.unwrap();*/
     }
 
-    async fn retry(f: impl AsyncFn()-> Result<WebElement, WebDriverError>) -> Result<WebElement, WebDriverError>{
-        for _ in 0..40 {
+    async fn retry<T>(f: impl AsyncFn()-> Result<T, WebDriverError>, retry_count: i32) -> Option<T>{
+        for _ in 0..retry_count {
             let result = f().await;
             
             if result.is_ok(){
-                return result;
+                return Some(result.unwrap());
             }
 
-            thread::sleep(Duration::from_millis(2000));
+            thread::sleep(Duration::from_millis(200));
         }
-        return f().await;
+        println!("Failed to find element after 40 retries");
+        return None;
     }
+
+    
     
 }
