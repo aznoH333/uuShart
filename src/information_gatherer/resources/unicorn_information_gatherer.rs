@@ -97,7 +97,7 @@ impl UnicornInformationGatherer{
         let leave_index = find_element_index_by_text(&buttons, "Opustit").await;
 
         debug_print(&buttons).await;
-        let mut clicked_label = String::new()
+        let mut clicked_label = String::new();
         for i in 0..buttons.iter().count(){
             if i as i32 == confirm_index || i as i32 == leave_index {
                 continue;
@@ -124,7 +124,7 @@ impl UnicornInformationGatherer{
         let show_solution_index = find_element_index_by_text(&buttons, "Ukaž řešení").await;
         click_button_if_exists(&buttons, show_solution_index).await;
 
-        
+
         // TODO : multi choice questions
         // TODO : match questions
         // TODO : order questions
