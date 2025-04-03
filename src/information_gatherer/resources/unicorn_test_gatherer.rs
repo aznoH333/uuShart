@@ -1,3 +1,5 @@
+use std::{thread, time::Duration};
+
 use async_trait::async_trait;
 use thirtyfour::By;
 
@@ -6,6 +8,8 @@ use crate::{information_gatherer::{information_gatherer::InformationGatherer, in
 pub struct UnicornTestGatherer{
     information_resource: Box<dyn InformationResource>,
     selenium_wrapper: UnicornSeleniumWrapper,
+    // just a hacky way to pass this value between multiple functions gets cleared often and breaks if things are called in the wrong order
+    question_order: Vec<String>, 
 
 }
 
@@ -18,6 +22,7 @@ impl UnicornTestGatherer{
         return UnicornTestGatherer{
             selenium_wrapper: UnicornSeleniumWrapper::new(information_resource.get_resource()).await,
             information_resource: information_resource,
+            question_order: Vec::new(),
         }
     }
 
@@ -33,21 +38,56 @@ impl UnicornTestGatherer{
 
     async fn solve_test(&mut self){
         // get question count
-        let question_count = self.selenium_wrapper.get_element(By::XPath("/html/body/div[1]/div/div[7]/div[4]/div/div/div/div/div[1]/div/div[2]/div/div[2]/div[2]/div/span[2]")).await.unwrap().text().await.unwrap();
+        let question_count = 
+            self.selenium_wrapper.get_element(By::XPath("/html/body/div[1]/div/div[7]/div[4]/div/div/div/div/div[1]/div/div[2]/div/div[2]/div[2]/div/span[2]"))
+            .await.unwrap()
+            .text().await.unwrap()[1..]
+            .parse::<i32>().unwrap();
 
-        println!("{}", question_count);
-
-        todo!("solve tests")
+        self.question_order.clear();
+        for _ in 0..question_count{
+            self.solve_question().await;
+        }
+        // navigate to resulsts page
+        self.selenium_wrapper.click_element_from_batch(By::ClassName("uu-coursekit-rounded-button-large"), 1).await;
+        thread::sleep(Duration::from_millis(200));
+        self.selenium_wrapper.click_element_from_batch(By::ClassName("uu-coursekit-leave-warning-button"), 1).await;
+        self.selenium_wrapper.click_element_from_batch(By::ClassName("uu-coursekit-rounded-button-large"), 0).await;
     }
 
     async fn solve_question(&mut self){
         // get question type
-        let question_type_element = self.selenium_wrapper.get_element(By::XPath("/html/body/div[1]/div/div[7]/div[4]/div/div/div/div/div[2]/div[1]/div[1]/div[2]")).await.unwrap();
-        let question_type = question_type_element.text().await.unwrap();
-        
+        let question_type = 
+            self.selenium_wrapper.get_element(By::XPath("/html/body/div[1]/div/div[7]/div[4]/div/div/div/div/div[2]/div[1]/div[1]/div[2]"))
+            .await.unwrap()
+            .text().await.unwrap();
+
+        match question_type.as_str() {
+            SELECT_CORRECT_ANSWER => { self.pass_select_correct_answer_question().await }
+            MARK_CORRECT_ANSWERS => { self.pass_mark_correct_answers_question().await }
+            FILL_IN_SENTENCE => { self.pass_fill_in_sentence_question().await }
+            _ => {}
+        }
+
+        self.question_order.push(question_type.to_owned());
     }
 
     async fn log_solutions(&mut self){
+        let answers = self.selenium_wrapper.get_elements(By::ClassName("uu5-bricks-panel")).await.unwrap();
+        
+        for index in 0..self.question_order.iter().count() {
+            let answer = answers.get(index).unwrap();
+            let question_type = self.question_order.get(index).unwrap();
+
+            let isCorrect = answer.id().await.unwrap().unwrap().starts_with("Correct");
+
+            match question_type.as_str() {
+                _ => {}
+            }
+
+            println!("{} {}", question_type, isCorrect);
+        }
+
         todo!("log solutions")
     }
 
@@ -59,16 +99,22 @@ impl UnicornTestGatherer{
 
     // pass functions
     async fn pass_select_correct_answer_question(&mut self){
-        todo!("this");
+        self.selenium_wrapper.click_element_from_batch(By::ClassName("uu-coursekit-question-t02-white-frame-answer-button"), 0).await;
+        self.selenium_wrapper.click_element_from_batch(By::ClassName("uu-coursekit-rounded-button-large"),1).await;
     }
 
     async fn pass_mark_correct_answers_question(&mut self) {
-        todo!("this");
+        self.selenium_wrapper.click_element(By::XPath("/html/body/div[1]/div/div[7]/div[4]/div/div/div/div/div[2]/div[1]/div[3]/div[1]/div/div")).await;
+        //self.selenium_wrapper.click_element_from_batch(By::ClassName("uu-coursekit-question-t03-white-frame-answer-button"), 0).await;
+        self.selenium_wrapper.click_element_from_batch(By::ClassName("uu-coursekit-rounded-button-large"),1).await;
     }
 
     async fn pass_fill_in_sentence_question(&mut self) {
-        todo!("this");
+        self.selenium_wrapper.click_element_from_batch(By::ClassName("uu-coursekit-question-t01-white-frame-answer-button"), 0).await;
+        self.selenium_wrapper.click_element_from_batch(By::ClassName("uu-coursekit-rounded-button-large"),1).await;
     }
+
+    // solution loggers
 
 }
 
