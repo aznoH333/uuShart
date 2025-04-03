@@ -27,7 +27,7 @@ impl InformationGatherer for UnicornInformationGatherer{
             return None;
         }
         
-        let mut solver = ProblemSolver::new();
+        let mut solver = ProblemSolver{};
 
         let big_links = self.selenium_wrapper.get_big_links().await.unwrap();
 
@@ -92,7 +92,7 @@ impl UnicornInformationGatherer{
 
         // SINGLE CHOICE QUESTION
 
-        // get awnsers
+        // get answers
         let confirm_index = find_element_index_by_text(&buttons, "Potvrdit").await;
         let leave_index = find_element_index_by_text(&buttons, "Opustit").await;
 
@@ -103,7 +103,7 @@ impl UnicornInformationGatherer{
                 continue;
             }
             
-            // click random awnser
+            // click random answer
             let button = buttons.get(i as usize).unwrap();
 
             if button.text().await.unwrap().is_empty(){
@@ -116,7 +116,7 @@ impl UnicornInformationGatherer{
 
         buttons.get(confirm_index as usize).unwrap().click().await.unwrap();
         
-        // check if awnser was correct
+        // check if answer was correct
         // refresh buttons
         buttons = self.selenium_wrapper.get_elements(By::ClassName("uu5-bricks-button-filled")).await.unwrap();
 
