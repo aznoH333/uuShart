@@ -3,7 +3,7 @@ use std::{thread, time::Duration};
 use async_trait::async_trait;
 use thirtyfour::{By, DesiredCapabilities, WebDriver, WebElement};
 
-use crate::{information_gatherer::{information_gatherer::InformationGatherer, information_resource::InformationResource, information_resource_type::InformationResourceType}, selenium_wrapper::unicorn_selenium_wrapper::UnicornSeleniumWrapper, solutions::problem_solver::SolutionCollection};
+use crate::{information_gatherer::{information_gatherer::InformationGatherer, information_resource::InformationResource, information_resource_type::InformationResourceType}, selenium_wrapper::unicorn_selenium_wrapper::UnicornSeleniumWrapper, solutions::solution_collection::SolutionCollection};
 
 pub struct UnicornInformationGatherer{
     information_resource: Box<dyn InformationResource>,

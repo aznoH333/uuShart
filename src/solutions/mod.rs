@@ -1,2 +1,2 @@
 pub mod solution;
-pub mod problem_solver;
+pub mod solution_collection;
