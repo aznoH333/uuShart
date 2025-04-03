@@ -78,6 +78,10 @@ impl UnicornSeleniumWrapper{
         return driver;
     }
 
+    pub async fn click_element(&mut self, by: By){
+        self.get_element(by).await.unwrap().click().await.unwrap();
+    }
+
     async fn retry<T>(f: impl AsyncFn()-> Result<T, WebDriverError>, retry_count: i32) -> Option<T>{
         for _ in 0..retry_count {
             let result = f().await;
