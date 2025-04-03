@@ -1,15 +1,16 @@
 use std::{thread, time::Duration};
 
 use async_trait::async_trait;
-use thirtyfour::By;
+use thirtyfour::{By, WebElement};
 
-use crate::{information_gatherer::{information_gatherer::InformationGatherer, information_resource::InformationResource}, selenium_wrapper::unicorn_selenium_wrapper::UnicornSeleniumWrapper, solutions::problem_solver::ProblemSolver};
+use crate::{information_gatherer::{information_gatherer::InformationGatherer, information_resource::InformationResource}, selenium_wrapper::unicorn_selenium_wrapper::UnicornSeleniumWrapper, solutions::problem_solver::SolutionCollection};
 
 pub struct UnicornTestGatherer{
     information_resource: Box<dyn InformationResource>,
     selenium_wrapper: UnicornSeleniumWrapper,
     // just a hacky way to pass this value between multiple functions gets cleared often and breaks if things are called in the wrong order
     question_order: Vec<String>, 
+
 
 }
 
@@ -77,15 +78,15 @@ impl UnicornTestGatherer{
         
         for index in 0..self.question_order.iter().count() {
             let answer = answers.get(index).unwrap();
-            let question_type = self.question_order.get(index).unwrap();
+            let question_type = self.question_order.get(index).unwrap().to_owned();
 
-            let isCorrect = answer.id().await.unwrap().unwrap().starts_with("Correct");
-
+            let is_correct = answer.id().await.unwrap().unwrap().starts_with("Correct");
+            
             match question_type.as_str() {
-                _ => {}
+                _ => { self.log_select_correct_answer_question(is_correct, &answer).await; }
             }
 
-            println!("{} {}", question_type, isCorrect);
+            println!("{} {}", question_type, is_correct);
         }
 
         todo!("log solutions")
@@ -115,12 +116,36 @@ impl UnicornTestGatherer{
     }
 
     // solution loggers
+    async fn log_select_correct_answer_question(&mut self, is_correct: bool, element: &WebElement){
+        // document.getElementsByClassName("uu5-bricks-panel")[0].children[1].children[0].children[0].children;
+        let label = element.find(By::ClassName("uu-coursekit-dark-text")).await.unwrap().text().await.unwrap();
+        
+
+
+
+        let correct_answer = element
+            .find(By::ClassName(if is_correct { "uu-coursekit-correct-state" } else { "uu-coursekit-result-state" })).await.unwrap()
+            .parent().await.unwrap()
+            .text().await.unwrap();
+
+
+        println!("{} {}", label, correct_answer);
+        
+    }
+
+    async fn log_mark_correct_answers_question(&mut self, is_correct: bool, element: &WebElement){
+        todo!("this");
+    }
+
+    async fn log_fill_in_sentence_question(&mut self, is_correct: bool, element: &WebElement){
+        todo!("this");
+    }
 
 }
 
 #[async_trait(?Send)]
 impl InformationGatherer for UnicornTestGatherer {
-    async fn gather_information(&mut self) -> Option<ProblemSolver> {
+    async fn gather_information(&mut self) -> Option<SolutionCollection> {
         
         // process main page    
         let button_count = self.selenium_wrapper.get_elements(By::ClassName("uu-coursekit-button-full")).await.unwrap().iter().count();

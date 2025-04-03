@@ -3,7 +3,7 @@ use std::{thread, time::Duration};
 use async_trait::async_trait;
 use thirtyfour::{By, DesiredCapabilities, WebDriver, WebElement};
 
-use crate::{information_gatherer::{information_gatherer::InformationGatherer, information_resource::InformationResource, information_resource_type::InformationResourceType}, selenium_wrapper::unicorn_selenium_wrapper::UnicornSeleniumWrapper, solutions::problem_solver::ProblemSolver};
+use crate::{information_gatherer::{information_gatherer::InformationGatherer, information_resource::InformationResource, information_resource_type::InformationResourceType}, selenium_wrapper::unicorn_selenium_wrapper::UnicornSeleniumWrapper, solutions::problem_solver::SolutionCollection};
 
 pub struct UnicornInformationGatherer{
     information_resource: Box<dyn InformationResource>,
@@ -22,12 +22,12 @@ impl UnicornInformationGatherer{
 
 #[async_trait(?Send)]
 impl InformationGatherer for UnicornInformationGatherer{
-    async fn gather_information(&mut self) -> Option<ProblemSolver> {
+    async fn gather_information(&mut self) -> Option<SolutionCollection> {
         if *self.information_resource.get_resource_type() != InformationResourceType::UuKit {
             return None;
         }
         
-        let mut solver = ProblemSolver{};
+        let mut solver = SolutionCollection{};
 
         let big_links = self.selenium_wrapper.get_big_links().await.unwrap();
 

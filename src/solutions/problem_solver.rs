@@ -2,10 +2,11 @@
 use super::solution::Solution;
 
 
-pub struct ProblemSolver{
+pub struct SolutionCollection{
+    
 }
 
-impl ProblemSolver{
+impl SolutionCollection{
     
 
 }
