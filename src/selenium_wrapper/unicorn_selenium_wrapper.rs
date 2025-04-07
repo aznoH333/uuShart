@@ -86,6 +86,10 @@ impl UnicornSeleniumWrapper{
         self.get_elements(by).await.unwrap().get(index).unwrap().click().await.unwrap();
     }
 
+    pub async fn go_to(&mut self, url: &String){
+        self.driver.goto(url.to_owned()).await.unwrap()
+    }
+
     async fn retry<T>(f: impl AsyncFn()-> Result<T, WebDriverError>, retry_count: i32) -> Option<T>{
         for _ in 0..retry_count {
             let result = f().await;

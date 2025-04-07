@@ -17,6 +17,7 @@ pub struct UnicornTestGatherer{
 
 const SELECT_CORRECT_ANSWER: &str = "Vyber správnou odpověď";
 const MARK_CORRECT_ANSWERS: &str = "Označ správné odpovědi";
+const FIND_CORRECT_ANSWERS: &str = "Najdi všechny správné odpovědi";
 const FILL_IN_SENTENCE: &str = "Doplň část věty";
 
 impl UnicornTestGatherer{
@@ -68,8 +69,11 @@ impl UnicornTestGatherer{
         match question_type.as_str() {
             SELECT_CORRECT_ANSWER => { self.pass_select_correct_answer_question().await }
             MARK_CORRECT_ANSWERS => { self.pass_mark_correct_answers_question().await }
+            FIND_CORRECT_ANSWERS => { self.pass_mark_correct_answers_question().await }
             FILL_IN_SENTENCE => { self.pass_fill_in_sentence_question().await }
-            _ => {}
+            _ => {
+                panic!("test fill failed : unknown question type {}", question_type);
+            }
         }
 
         self.question_order.push(question_type.to_owned());
@@ -85,23 +89,19 @@ impl UnicornTestGatherer{
             let is_correct = answer.id().await.unwrap().unwrap().starts_with("Correct");
             
             match question_type.as_str() {
-                _ => { self.log_select_correct_answer_question(is_correct, &answer).await; }
-            }
-
-        }
-
-
-        for (label, solution) in &self.solutions{
-            println!("label: {}", label);
-            for step in solution {
-                println!("step: {}", step);
+                SELECT_CORRECT_ANSWER => { self.log_select_correct_answer_question(is_correct, &answer).await; }
+                MARK_CORRECT_ANSWERS => { self.log_mark_correct_answers_question(is_correct, &answer).await; }
+                FIND_CORRECT_ANSWERS => { self.log_mark_correct_answers_question(is_correct, &answer).await; }
+                FILL_IN_SENTENCE => { self.log_fill_in_sentence_question(is_correct, &answer).await; }
+                _ => { 
+                    panic!("log failed : unknown question type {}", question_type); 
+                }
             }
         }
-        todo!("log solutions")
     }
 
     async fn return_to_main_page(&mut self){
-        todo!("return to main page");
+        self.selenium_wrapper.go_to(self.information_resource.get_resource()).await;
     }
 
     
@@ -147,11 +147,44 @@ impl UnicornTestGatherer{
     }
 
     async fn log_mark_correct_answers_question(&mut self, is_correct: bool, element: &WebElement){
-        todo!("this");
+        let label = element.find(By::ClassName("uu-coursekit-dark-text")).await.unwrap().text().await.unwrap();
+
+        // skip if exists
+        if self.solutions.contains_key(&label){
+            return;
+        }
+        //uu-coursekit-result-state
+        let answer_elements = element
+            .find_all(By::ClassName(if is_correct { "uu-coursekit-correct-state" } else { "uu-coursekit-result-state" })).await.unwrap();
+        
+
+
+        let mut answers: Vec<String> = Vec::new();
+        for answer_element in answer_elements {
+            if answer_element.tag_name().await.unwrap() != "div" {
+                continue;
+            } 
+            answers.push(answer_element.text().await.unwrap());
+        }
+
+        self.solutions.insert(label, answers);
     }
 
     async fn log_fill_in_sentence_question(&mut self, is_correct: bool, element: &WebElement){
-        todo!("this");
+        let label = element.find(By::ClassName("uu-coursekit-dark-text")).await.unwrap().text().await.unwrap();
+
+        // skip if exists
+        if self.solutions.contains_key(&label){
+            return;
+        }
+        
+        let correct_answer = element
+            .find(By::ClassName(if is_correct { "uu-coursekit-correct-state" } else { "uu-coursekit-result-state" })).await.unwrap()
+            .text().await.unwrap();
+        
+        let mut answers: Vec<String> = Vec::new();
+        answers.push(correct_answer);
+        self.solutions.insert(label, answers);
     }
 
 }

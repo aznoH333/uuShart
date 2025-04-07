@@ -11,4 +11,12 @@ impl Solution{
             solving_steps: solving_steps,
         };
     }
+
+    pub fn get_label(&self) -> &String {
+        return &self.label;
+    }
+
+    pub fn get_solving_steps(&self) -> &Vec<String> {
+        return &self.solving_steps;
+    }
 }
