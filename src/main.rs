@@ -1,8 +1,10 @@
 use information_gatherer::{information_gatherer::InformationGatherer, resources::{unicorn_information_gatherer::UnicornInformationGatherer, unicorn_information_resource::UnicornInformationResource, unicorn_test_gatherer::UnicornTestGatherer}};
+use utils::savable::Savable;
 
 pub mod solutions;
 pub mod information_gatherer;
 pub mod selenium_wrapper;
+pub mod utils;
 
 #[tokio::main]
 async fn main() {
@@ -13,8 +15,8 @@ async fn main() {
         
     let solver = gatherer.gather_information().await.unwrap();
 
-    
 
+    solver.save_to_file("./test.txt".to_owned());
 
 
 }

@@ -22,12 +22,12 @@ impl UnicornInformationGatherer{
 
 #[async_trait(?Send)]
 impl InformationGatherer for UnicornInformationGatherer{
-    async fn gather_information(&mut self) -> Option<SolutionCollection> {
+    async fn gather_information(&mut self) -> Option<&SolutionCollection> {
         if *self.information_resource.get_resource_type() != InformationResourceType::UuKit {
             return None;
         }
         
-        let mut solver = SolutionCollection{};
+        let mut solver = SolutionCollection::new();
 
         let big_links = self.selenium_wrapper.get_big_links().await.unwrap();
 
@@ -35,7 +35,8 @@ impl InformationGatherer for UnicornInformationGatherer{
             self.go_through_course(link).await;
         }
 
-        return Some(solver);
+        todo!("delete this");
+        //return Some(solver);
 
 
     }

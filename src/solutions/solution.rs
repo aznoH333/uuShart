@@ -1,3 +1,5 @@
+use std::fmt::format;
+
 
 pub struct Solution{
     label: String,
@@ -18,5 +20,9 @@ impl Solution{
 
     pub fn get_solving_steps(&self) -> &Vec<String> {
         return &self.solving_steps;
+    }
+
+    pub fn to_string(&self) -> String {
+        return format!("[{}] -> [{}]", self.label, self.solving_steps.join(", "));
     }
 }
