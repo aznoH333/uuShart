@@ -13,7 +13,8 @@ pub struct UnicornTestGatherer{
     // just a hacky way to pass this value between multiple functions gets cleared often and breaks if things are called in the wrong order
     question_order: Vec<String>, 
     // solutions map < label, list of answers >
-    solutions: SolutionCollection
+    solutions: SolutionCollection,
+    gathered_information: i32,
 
 }
 
@@ -24,6 +25,7 @@ impl UnicornTestGatherer{
             information_resource: information_resource,
             question_order: Vec::new(),
             solutions: SolutionCollection::new(),
+            gathered_information: 0
         }
     }
 
@@ -149,7 +151,7 @@ impl UnicornTestGatherer{
         // log to solutions
         let mut answers: Vec<String> = Vec::new();
         answers.push(correct_answer);
-        self.solutions.add_solution(Solution::new(label, answers));
+        if self.solutions.add_solution(Solution::new(label, answers)) { self.gathered_information += 1; }
     }
 
     async fn log_mark_correct_answers_question(&mut self, is_correct: bool, element: &WebElement){
@@ -168,7 +170,7 @@ impl UnicornTestGatherer{
             answers.push(answer_element.text().await.unwrap());
         }
 
-        self.solutions.add_solution(Solution::new(label, answers));
+        if self.solutions.add_solution(Solution::new(label, answers)) { self.gathered_information += 1; }
     }
 
     async fn log_fill_in_sentence_question(&mut self, is_correct: bool, element: &WebElement){
@@ -180,7 +182,7 @@ impl UnicornTestGatherer{
         
         let mut answers: Vec<String> = Vec::new();
         answers.push(correct_answer);
-        self.solutions.add_solution(Solution::new(label, answers));
+        if self.solutions.add_solution(Solution::new(label, answers)) { self.gathered_information += 1; }
     }
 
 }
@@ -194,10 +196,20 @@ impl InformationGatherer for UnicornTestGatherer {
         
         // iterate tests
         for i in 0..button_count {
-            self.start_test(i).await;
-            self.solve_test().await;
-            self.log_solutions().await;
-            self.return_to_main_page().await;
+            // nemame technologii na do while to je shart
+            
+            loop {
+                self.gathered_information = 0;
+                self.start_test(i).await;
+                self.solve_test().await;
+                self.log_solutions().await;
+                self.return_to_main_page().await;
+
+                if self.gathered_information < 2{
+                    break; // tohle je mega fart.
+                }
+            }
+            
         }
 
 

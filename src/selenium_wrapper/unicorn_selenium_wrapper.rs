@@ -62,8 +62,8 @@ impl UnicornSeleniumWrapper{
     pub async fn check_if_element_exists_and_is_clickable(&mut self, by: By, wait_ms: u64) -> bool {
         thread::sleep(Duration::from_millis(wait_ms));
         
-        let rust = Self::retry::<WebElement>(async ||{return self.driver.find(by.clone()).await;}, 5).await; // rust options cant do async lambdas yet
-        if rust.is_none(){
+        let rust = self.driver.find(by.clone()).await;
+        if rust.is_err(){
             return false
         }
 

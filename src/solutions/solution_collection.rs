@@ -15,12 +15,13 @@ impl SolutionCollection{
         return SolutionCollection { solutions: HashMap::new() };
     }
 
-    pub fn add_solution(&mut self, solution: Solution){
+    pub fn add_solution(&mut self, solution: Solution) -> bool{
 
         if !self.solutions.contains_key(solution.get_label()) {
             self.solutions.insert(solution.get_label().to_owned(), solution);
+            return true;
         }
-
+        return false;
     }
 
     pub fn log_solutions_to_console(&self) {

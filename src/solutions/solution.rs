@@ -23,6 +23,6 @@ impl Solution{
     }
 
     pub fn to_string(&self) -> String {
-        return format!("[{}] -> [{}]", self.label, self.solving_steps.join(", "));
+        return format!("[{}] -> [{}]", self.label, self.solving_steps.join("|||| "));
     }
 }
