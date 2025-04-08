@@ -59,6 +59,17 @@ impl UnicornSeleniumWrapper{
         return Self::retry::<WebElement>(async ||{return self.driver.find(by.clone()).await;}, 5).await.is_some();
     }
 
+    pub async fn check_if_element_exists_and_is_clickable(&mut self, by: By, wait_ms: u64) -> bool {
+        thread::sleep(Duration::from_millis(wait_ms));
+        
+        let rust = Self::retry::<WebElement>(async ||{return self.driver.find(by.clone()).await;}, 5).await; // rust options cant do async lambdas yet
+        if rust.is_none(){
+            return false
+        }
+
+        return rust.unwrap().is_clickable().await.unwrap()
+    }
+
 
     async fn go_to_course_kit(&mut self){
         self.driver.goto(self.current_url.clone()).await.unwrap();
@@ -100,7 +111,7 @@ impl UnicornSeleniumWrapper{
 
             thread::sleep(Duration::from_millis(200));
         }
-        println!("Failed to find element after 40 retries");
+        println!("Failed to find element after {} retries", retry_count);
         return None;
     }
 

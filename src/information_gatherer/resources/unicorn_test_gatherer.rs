@@ -5,6 +5,8 @@ use thirtyfour::{By, WebElement};
 
 use crate::{information_gatherer::{information_gatherer::InformationGatherer, information_resource::InformationResource}, selenium_wrapper::unicorn_selenium_wrapper::UnicornSeleniumWrapper, solutions::{solution::Solution, solution_collection::SolutionCollection}};
 
+use super::unicorn_question_type::UnicornQuestionType;
+
 pub struct UnicornTestGatherer{
     information_resource: Box<dyn InformationResource>,
     selenium_wrapper: UnicornSeleniumWrapper,
@@ -14,11 +16,6 @@ pub struct UnicornTestGatherer{
     solutions: SolutionCollection
 
 }
-
-const SELECT_CORRECT_ANSWER: &str = "Vyber správnou odpověď";
-const MARK_CORRECT_ANSWERS: &str = "Označ správné odpovědi";
-const FIND_CORRECT_ANSWERS: &str = "Najdi všechny správné odpovědi";
-const FILL_IN_SENTENCE: &str = "Doplň část věty";
 
 impl UnicornTestGatherer{
     pub async fn new(information_resource: Box<dyn InformationResource>) -> UnicornTestGatherer {
@@ -61,22 +58,18 @@ impl UnicornTestGatherer{
 
     async fn solve_question(&mut self){
         // get question type
-        let question_type = 
-            self.selenium_wrapper.get_element(By::XPath("/html/body/div[1]/div/div[7]/div[4]/div/div/div/div/div[2]/div[1]/div[1]/div[2]"))
-            .await.unwrap()
-            .text().await.unwrap();
+        let question_type = self.determine_question_type().await;
 
-        match question_type.as_str() {
-            SELECT_CORRECT_ANSWER => { self.pass_select_correct_answer_question().await }
-            MARK_CORRECT_ANSWERS => { self.pass_mark_correct_answers_question().await }
-            FIND_CORRECT_ANSWERS => { self.pass_mark_correct_answers_question().await }
-            FILL_IN_SENTENCE => { self.pass_fill_in_sentence_question().await }
+        match question_type {
+            UnicornQuestionType::SINGLE_CHOICE => { self.pass_select_correct_answer_question().await } // TODO : rewrite theese solve/log questions to be an enum function
+            UnicornQuestionType::MULTI_SELECT => { self.pass_mark_correct_answers_question().await }
+            UnicornQuestionType::FILL_SENTENCE => { self.pass_fill_in_sentence_question().await }
             _ => {
-                panic!("test fill failed : unknown question type {}", question_type);
+                panic!("test fill failed : unknown question type");
             }
         }
 
-        self.question_order.push(question_type.to_owned());
+        self.question_order.push(question_type.to_string().to_owned());
     }
 
     async fn log_solutions(&mut self){
@@ -86,13 +79,12 @@ impl UnicornTestGatherer{
             let answer = answers.get(index).unwrap();
             let question_type = self.question_order.get(index).unwrap().to_owned();
 
-            let is_correct = answer.id().await.unwrap().unwrap().starts_with("Correct");
+            let is_correct = answer.id().await.unwrap().unwrap().starts_with("Correct"); // TODO : this whole question type thingy sucks and i hate it
             
-            match question_type.as_str() {
-                SELECT_CORRECT_ANSWER => { self.log_select_correct_answer_question(is_correct, &answer).await; }
-                MARK_CORRECT_ANSWERS => { self.log_mark_correct_answers_question(is_correct, &answer).await; }
-                FIND_CORRECT_ANSWERS => { self.log_mark_correct_answers_question(is_correct, &answer).await; }
-                FILL_IN_SENTENCE => { self.log_fill_in_sentence_question(is_correct, &answer).await; }
+            match UnicornQuestionType::from_string(&question_type) {
+                UnicornQuestionType::SINGLE_CHOICE => { self.log_select_correct_answer_question(is_correct, &answer).await; }
+                UnicornQuestionType::MULTI_SELECT => { self.log_mark_correct_answers_question(is_correct, &answer).await; }
+                UnicornQuestionType::FILL_SENTENCE => { self.log_fill_in_sentence_question(is_correct, &answer).await; }
                 _ => { 
                     panic!("log failed : unknown question type {}", question_type); 
                 }
@@ -104,6 +96,27 @@ impl UnicornTestGatherer{
         self.selenium_wrapper.go_to(self.information_resource.get_resource()).await;
     }
 
+    async fn determine_question_type(&mut self) -> UnicornQuestionType{
+        let is_single_select = self.selenium_wrapper.check_if_element_exists_and_is_clickable(By::ClassName("uu-coursekit-question-t02-white-frame-answer-button"), 10).await;
+        let is_mutli_choice = self.selenium_wrapper.check_if_element_exists_and_is_clickable(By::ClassName("uu-coursekit-question-t03-white-frame-answer-button"), 10).await;
+        let is_fill_in_sentence = self.selenium_wrapper.check_if_element_exists_and_is_clickable(By::ClassName("uu-coursekit-question-t01-white-frame-answer-button"), 10).await;
+
+
+        println!("result {} {} {}", is_single_select.to_string(), is_mutli_choice.to_string(), is_fill_in_sentence.to_string());
+        if is_single_select as u8 + is_mutli_choice as u8 + is_fill_in_sentence as u8 > 1 {
+            panic!("indecisive question type {} {} {}", is_single_select.to_string(), is_mutli_choice.to_string(), is_fill_in_sentence.to_string());
+        }
+
+        if is_single_select {
+            return UnicornQuestionType::SINGLE_CHOICE;
+        }else if is_mutli_choice {
+            return UnicornQuestionType::MULTI_SELECT;
+        }else if is_fill_in_sentence{
+            return UnicornQuestionType::FILL_SENTENCE;
+        }
+
+        todo!("beams");
+    }
     
 
     // pass functions
@@ -113,7 +126,7 @@ impl UnicornTestGatherer{
     }
 
     async fn pass_mark_correct_answers_question(&mut self) {
-        self.selenium_wrapper.click_element(By::XPath("/html/body/div[1]/div/div[7]/div[4]/div/div/div/div/div[2]/div[1]/div[3]/div[1]/div/div")).await;
+        self.selenium_wrapper.click_element(By::ClassName("uu-coursekit-question-t03-white-frame-answer-button")).await;
         self.selenium_wrapper.click_element_from_batch(By::ClassName("uu-coursekit-rounded-button-large"),1).await;
     }
 
