@@ -66,6 +66,7 @@ impl UnicornTestGatherer{
             UnicornQuestionType::SINGLE_CHOICE => { self.pass_select_correct_answer_question().await } // TODO : rewrite theese solve/log questions to be an enum function
             UnicornQuestionType::MULTI_SELECT => { self.pass_mark_correct_answers_question().await }
             UnicornQuestionType::FILL_SENTENCE => { self.pass_fill_in_sentence_question().await }
+            UnicornQuestionType::YES_NO => { self.pass_yes_no_question().await }
             _ => {
                 panic!("test fill failed : unknown question type");
             }
@@ -87,6 +88,7 @@ impl UnicornTestGatherer{
                 UnicornQuestionType::SINGLE_CHOICE => { self.log_select_correct_answer_question(is_correct, &answer).await; }
                 UnicornQuestionType::MULTI_SELECT => { self.log_mark_correct_answers_question(is_correct, &answer).await; }
                 UnicornQuestionType::FILL_SENTENCE => { self.log_fill_in_sentence_question(is_correct, &answer).await; }
+                UnicornQuestionType::YES_NO => { self.log_yes_no_question(is_correct, &answer).await; }
                 _ => { 
                     panic!("log failed : unknown question type {}", question_type); 
                 }
@@ -102,7 +104,7 @@ impl UnicornTestGatherer{
         let is_single_select = self.selenium_wrapper.check_if_element_exists_and_is_clickable(By::ClassName("uu-coursekit-question-t02-white-frame-answer-button"), 10).await;
         let is_mutli_choice = self.selenium_wrapper.check_if_element_exists_and_is_clickable(By::ClassName("uu-coursekit-question-t03-white-frame-answer-button"), 10).await;
         let is_fill_in_sentence = self.selenium_wrapper.check_if_element_exists_and_is_clickable(By::ClassName("uu-coursekit-question-t01-white-frame-answer-button"), 10).await;
-
+        let is_yes_no = self.selenium_wrapper.check_if_element_exists(By::ClassName("uu-coursekit-question-t10-white-frame-answer-button"), 10).await;
 
         println!("result {} {} {}", is_single_select.to_string(), is_mutli_choice.to_string(), is_fill_in_sentence.to_string());
         if is_single_select as u8 + is_mutli_choice as u8 + is_fill_in_sentence as u8 > 1 {
@@ -115,6 +117,8 @@ impl UnicornTestGatherer{
             return UnicornQuestionType::MULTI_SELECT;
         }else if is_fill_in_sentence{
             return UnicornQuestionType::FILL_SENTENCE;
+        }else if is_yes_no{
+            return UnicornQuestionType::YES_NO;
         }
 
         todo!("beams");
@@ -134,6 +138,11 @@ impl UnicornTestGatherer{
 
     async fn pass_fill_in_sentence_question(&mut self) {
         self.selenium_wrapper.click_element_from_batch(By::ClassName("uu-coursekit-question-t01-white-frame-answer-button"), 0).await;
+        self.selenium_wrapper.click_element_from_batch(By::ClassName("uu-coursekit-rounded-button-large"),1).await;
+    }
+
+    async fn pass_yes_no_question(&mut self) {
+        self.selenium_wrapper.click_element_from_batch(By::ClassName("uu-coursekit-question-t10-white-frame-answer-button"), 0).await;
         self.selenium_wrapper.click_element_from_batch(By::ClassName("uu-coursekit-rounded-button-large"),1).await;
     }
 
@@ -178,6 +187,18 @@ impl UnicornTestGatherer{
 
         let correct_answer = element
             .find(By::ClassName(if is_correct { "uu-coursekit-correct-state" } else { "uu-coursekit-result-state" })).await.unwrap()
+            .text().await.unwrap();
+        
+        let mut answers: Vec<String> = Vec::new();
+        answers.push(correct_answer);
+        if self.solutions.add_solution(Solution::new(label, answers)) { self.gathered_information += 1; }
+    }
+
+    async fn log_yes_no_question(&mut self, is_correct: bool, element: &WebElement) {
+        let label = element.find(By::ClassName("uu-coursekit-dark-text")).await.unwrap().text().await.unwrap();
+
+        let correct_answer = element
+            .find(By::ClassName(if is_correct { "uu-coursekit-question-t10-white-frame-answer-correct-answer-button-correct" } else { "uu-coursekit-question-t10-white-frame-result-answer-button-correct" })).await.unwrap()
             .text().await.unwrap();
         
         let mut answers: Vec<String> = Vec::new();

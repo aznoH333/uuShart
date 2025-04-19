@@ -1,7 +1,9 @@
 pub enum UnicornQuestionType {
     MULTI_SELECT,
     SINGLE_CHOICE,
-    FILL_SENTENCE
+    FILL_SENTENCE,
+    YES_NO,
+    JOIN_ANSWERS,
 }
 
 impl UnicornQuestionType{
@@ -14,6 +16,10 @@ impl UnicornQuestionType{
             "Najdi všechny správné odpovědi" => { return UnicornQuestionType::MULTI_SELECT; }
 
             "Doplň část věty" => { return UnicornQuestionType::FILL_SENTENCE; }
+            
+            "Ano/Ne" => { return UnicornQuestionType::YES_NO; }
+            "Spoj odpovědi" => { return UnicornQuestionType::JOIN_ANSWERS; }
+
             _ => { panic!("unknown type {}", input)}
         }
     }
@@ -23,6 +29,8 @@ impl UnicornQuestionType{
             Self::MULTI_SELECT => { return "Označ správné odpovědi"; }
             Self::SINGLE_CHOICE => { return "Vyber správnou odpověď"; }
             Self::FILL_SENTENCE => { return "Doplň část věty"; }
+            Self::YES_NO => { return "Ano/Ne"; }
+            Self::JOIN_ANSWERS => { return "Spoj odpovědi" }
         }
     }
 }
