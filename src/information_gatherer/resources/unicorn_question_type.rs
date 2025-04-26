@@ -4,6 +4,7 @@ pub enum UnicornQuestionType {
     FILL_SENTENCE,
     YES_NO,
     JOIN_ANSWERS,
+    ORDER_ANSWERS,
 }
 
 impl UnicornQuestionType{
@@ -19,6 +20,7 @@ impl UnicornQuestionType{
             
             "Ano/Ne" => { return UnicornQuestionType::YES_NO; }
             "Spoj odpovědi" => { return UnicornQuestionType::JOIN_ANSWERS; }
+            "Penis" => { return UnicornQuestionType::ORDER_ANSWERS; }
 
             _ => { panic!("unknown type {}", input)}
         }
@@ -30,7 +32,8 @@ impl UnicornQuestionType{
             Self::SINGLE_CHOICE => { return "Vyber správnou odpověď"; }
             Self::FILL_SENTENCE => { return "Doplň část věty"; }
             Self::YES_NO => { return "Ano/Ne"; }
-            Self::JOIN_ANSWERS => { return "Spoj odpovědi" }
+            Self::JOIN_ANSWERS => { return "Spoj odpovědi"; }
+            Self::ORDER_ANSWERS => { return "Penis"; }
         }
     }
 }
