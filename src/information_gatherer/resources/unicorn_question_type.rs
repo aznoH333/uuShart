@@ -5,6 +5,7 @@ pub enum UnicornQuestionType {
     YES_NO,
     JOIN_ANSWERS,
     ORDER_ANSWERS,
+    ORDER_ALT_ANSWERS,
 }
 
 impl UnicornQuestionType{
@@ -22,6 +23,8 @@ impl UnicornQuestionType{
             "Spoj odpovědi" => { return UnicornQuestionType::JOIN_ANSWERS; }
             "Penis" => { return UnicornQuestionType::ORDER_ANSWERS; }
 
+            "a" => { return UnicornQuestionType::ORDER_ALT_ANSWERS; }
+
             _ => { panic!("unknown type {}", input)}
         }
     }
@@ -34,6 +37,7 @@ impl UnicornQuestionType{
             Self::YES_NO => { return "Ano/Ne"; }
             Self::JOIN_ANSWERS => { return "Spoj odpovědi"; }
             Self::ORDER_ANSWERS => { return "Penis"; }
+            Self::ORDER_ALT_ANSWERS => { return "a"; }
         }
     }
 }

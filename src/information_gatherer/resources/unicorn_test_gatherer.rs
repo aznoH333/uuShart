@@ -69,6 +69,7 @@ impl UnicornTestGatherer{
             UnicornQuestionType::YES_NO => { self.pass_yes_no_question().await; }
             UnicornQuestionType::JOIN_ANSWERS => { self.pass_join_question().await; }
             UnicornQuestionType::ORDER_ANSWERS => { self.pass_order_question().await; }
+            UnicornQuestionType::ORDER_ALT_ANSWERS => { self.pass_order_alt_question().await;}
             _ => {
                 panic!("test fill failed : unknown question type");
             }
@@ -93,6 +94,7 @@ impl UnicornTestGatherer{
                 UnicornQuestionType::YES_NO => { self.log_yes_no_question(is_correct, &answer).await; }
                 UnicornQuestionType::JOIN_ANSWERS => { self.log_join_question(is_correct, &answer).await; }
                 UnicornQuestionType::ORDER_ANSWERS => { self.log_order_question(is_correct, &answer).await; }
+                UnicornQuestionType::ORDER_ALT_ANSWERS => { self.log_order_question(is_correct, &answer).await; }
                 _ => { 
                     panic!("log failed : unknown question type {}", question_type); 
                 }
@@ -111,6 +113,7 @@ impl UnicornTestGatherer{
         let is_yes_no = self.selenium_wrapper.check_if_element_exists(By::ClassName("uu-coursekit-question-t10-white-frame-answer-button"), 10).await;
         let is_join = self.selenium_wrapper.check_if_element_exists(By::ClassName("uu-coursekit-question-t06-white-frame-answer-button"), 10).await;
         let is_order = self.selenium_wrapper.check_if_element_exists(By::ClassName("uu-coursekit-question-t09-answer-option"), 10).await;
+        let is_order_alt = self.selenium_wrapper.check_if_element_exists(By::ClassName("uu-coursekit-question-t08-answer-option"), 10).await;
 
         println!("result {} {} {}", is_single_select.to_string(), is_mutli_choice.to_string(), is_fill_in_sentence.to_string());
         if is_single_select as u8 + is_mutli_choice as u8 + is_fill_in_sentence as u8 > 1 {
@@ -129,6 +132,8 @@ impl UnicornTestGatherer{
             return UnicornQuestionType::JOIN_ANSWERS;
         }else if is_order{
             return UnicornQuestionType::ORDER_ANSWERS;
+        }else if is_order_alt{
+            return UnicornQuestionType::ORDER_ALT_ANSWERS;
         }
 
         todo!("beams");
@@ -202,6 +207,18 @@ impl UnicornTestGatherer{
 
     async fn pass_order_question(&mut self) {
         let buttons = self.selenium_wrapper.get_elements(By::ClassName("uu-coursekit-question-t09-answer-option")).await.unwrap();
+
+        for button in &buttons {
+            button.click().await.unwrap();
+        }
+
+        self.selenium_wrapper.click_element_from_batch(By::ClassName("uu-coursekit-rounded-button-large"),1).await;
+    }
+
+    async fn pass_order_alt_question(&mut self) {
+        //uu-coursekit-question-t08-answer-option
+
+        let buttons = self.selenium_wrapper.get_elements(By::ClassName("uu-coursekit-question-t08-answer-option")).await.unwrap();
 
         for button in &buttons {
             button.click().await.unwrap();

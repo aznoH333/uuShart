@@ -56,7 +56,7 @@ impl UnicornSeleniumWrapper{
 
     pub async fn check_if_element_exists(&mut self, by: By, wait_ms: u64) -> bool{
         thread::sleep(Duration::from_millis(wait_ms));
-        return Self::retry::<WebElement>(async ||{return self.driver.find(by.clone()).await;}, 5).await.is_some();
+        return Self::retry::<WebElement>(async ||{return self.driver.find(by.clone()).await;}, 1).await.is_some();
     }
 
     pub async fn check_if_element_exists_and_is_clickable(&mut self, by: By, wait_ms: u64) -> bool {
