@@ -125,7 +125,7 @@ impl UnicornTestGatherer{
         let is_join_multi_choice = self.selenium_wrapper.check_if_element_exists(By::ClassName("uu-coursekit-question-t07-white-frame-answer-rows"), 2).await;
         let is_pick_one = self.selenium_wrapper.check_if_element_exists(By::ClassName("uu-coursekit-question-t04-white-frame-answer-border"), 2).await;
 
-
+        // TODO : investigate randomized button clicking as a general question solver
         println!("result {} {} {}", is_single_select.to_string(), is_mutli_choice.to_string(), is_fill_in_sentence.to_string());
         if is_single_select as u8 + is_mutli_choice as u8 + is_fill_in_sentence as u8 > 1 {
             panic!("indecisive question type {} {} {}", is_single_select.to_string(), is_mutli_choice.to_string(), is_fill_in_sentence.to_string());
@@ -280,14 +280,15 @@ impl UnicornTestGatherer{
 
 
 
-        let answer_count = filtered_children.get(0).unwrap().find_all(By::ClassName("uu-coursekit-question-t07-white-frame-answer-button")).await.unwrap().iter().count();
+        let answer_count = filtered_children.get(0).unwrap().find_all(By::ClassName("uu-coursekit-question-t07-white-frame-answer-button")).await.unwrap().iter().count() / 2;
+        println!("{} got here", answer_count);
 
         for _ in 0..answer_count {
-            for _ in &filtered_children {
-                self.selenium_wrapper.click_element_from_batch(By::ClassName("uu-coursekit-question-t07-white-frame-answer-button"), 0).await;
+            for child in &filtered_children {
+                child.find(By::ClassName("uu-coursekit-question-t07-white-frame-answer-button")).await.unwrap().click().await.unwrap();
             }
         }
-
+        println!("got here");
         self.selenium_wrapper.click_element_from_batch(By::ClassName("uu5-bricks-button-xl"),1).await;
     }
 
