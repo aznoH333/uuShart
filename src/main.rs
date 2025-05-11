@@ -11,14 +11,14 @@ pub mod utils;
 #[tokio::main]
 async fn main() {
     // load test course
-    let resource = UnicornInformationResource::new("https://uuapp.plus4u.net/uu-coursekit-courseg01/4d81aca2c63248b6ad64245c395e6867/course/testMenu".to_owned());
+    let resource = UnicornInformationResource::new("https://uuapp.plus4u.net/uu-coursekit-courseg01/286a85d928da49ebb60816c715ae15dc/course/testMenu".to_owned());
 
     let mut gatherer = UnicornTestGatherer::new(Box::new(resource)).await;
         
     let solver = gatherer.gather_information().await.unwrap();
 
 
-    solver.save_to_file("./test3.txt".to_owned());
+    solver.save_to_file("./test4.txt".to_owned());
 
 
 }

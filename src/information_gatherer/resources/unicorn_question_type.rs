@@ -6,6 +6,8 @@ pub enum UnicornQuestionType {
     JOIN_ANSWERS,
     ORDER_ANSWERS,
     ORDER_ALT_ANSWERS,
+    FILL_IN_MULTIPLE_ANSWER,
+    JOIN_MULTI_CHOICE,
 }
 
 impl UnicornQuestionType{
@@ -25,6 +27,9 @@ impl UnicornQuestionType{
 
             "a" => { return UnicornQuestionType::ORDER_ALT_ANSWERS; }
 
+            "b" => { return UnicornQuestionType::FILL_IN_MULTIPLE_ANSWER; }
+
+            "c" => { return UnicornQuestionType::JOIN_MULTI_CHOICE}
             _ => { panic!("unknown type {}", input)}
         }
     }
@@ -38,6 +43,7 @@ impl UnicornQuestionType{
             Self::JOIN_ANSWERS => { return "Spoj odpovědi"; }
             Self::ORDER_ANSWERS => { return "Penis"; }
             Self::ORDER_ALT_ANSWERS => { return "a"; }
+            Self::FILL_IN_MULTIPLE_ANSWER => { return "b"; }
         }
     }
 }

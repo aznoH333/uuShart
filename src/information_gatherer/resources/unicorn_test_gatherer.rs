@@ -70,6 +70,7 @@ impl UnicornTestGatherer{
             UnicornQuestionType::JOIN_ANSWERS => { self.pass_join_question().await; }
             UnicornQuestionType::ORDER_ANSWERS => { self.pass_order_question().await; }
             UnicornQuestionType::ORDER_ALT_ANSWERS => { self.pass_order_alt_question().await;}
+            UnicornQuestionType::FILL_IN_MULTIPLE_ANSWER => { self.pass_fill_in_multiple_question().await; }
             _ => {
                 panic!("test fill failed : unknown question type");
             }
@@ -95,6 +96,7 @@ impl UnicornTestGatherer{
                 UnicornQuestionType::JOIN_ANSWERS => { self.log_join_question(is_correct, &answer).await; }
                 UnicornQuestionType::ORDER_ANSWERS => { self.log_order_question(is_correct, &answer).await; }
                 UnicornQuestionType::ORDER_ALT_ANSWERS => { self.log_order_question(is_correct, &answer).await; }
+                UnicornQuestionType::FILL_IN_MULTIPLE_ANSWER => { self.log_fill_in_multiple_question(is_correct, &answer).await; }
                 _ => { 
                     panic!("log failed : unknown question type {}", question_type); 
                 }
@@ -108,12 +110,13 @@ impl UnicornTestGatherer{
 
     async fn determine_question_type(&mut self) -> UnicornQuestionType{
         let is_single_select = self.selenium_wrapper.check_if_element_exists_and_is_clickable(By::ClassName("uu-coursekit-question-t02-white-frame-answer-button"), 10).await;
-        let is_mutli_choice = self.selenium_wrapper.check_if_element_exists_and_is_clickable(By::ClassName("uu-coursekit-question-t03-white-frame-answer-button"), 10).await;
-        let is_fill_in_sentence = self.selenium_wrapper.check_if_element_exists_and_is_clickable(By::ClassName("uu-coursekit-question-t01-white-frame-answer-button"), 10).await;
-        let is_yes_no = self.selenium_wrapper.check_if_element_exists(By::ClassName("uu-coursekit-question-t10-white-frame-answer-button"), 10).await;
-        let is_join = self.selenium_wrapper.check_if_element_exists(By::ClassName("uu-coursekit-question-t06-white-frame-answer-button"), 10).await;
-        let is_order = self.selenium_wrapper.check_if_element_exists(By::ClassName("uu-coursekit-question-t09-answer-option"), 10).await;
-        let is_order_alt = self.selenium_wrapper.check_if_element_exists(By::ClassName("uu-coursekit-question-t08-answer-option"), 10).await;
+        let is_mutli_choice = self.selenium_wrapper.check_if_element_exists_and_is_clickable(By::ClassName("uu-coursekit-question-t03-white-frame-answer-button"), 2).await;
+        let is_fill_in_sentence = self.selenium_wrapper.check_if_element_exists_and_is_clickable(By::ClassName("uu-coursekit-question-t01-white-frame-answer-button"), 2).await;
+        let is_yes_no = self.selenium_wrapper.check_if_element_exists(By::ClassName("uu-coursekit-question-t10-white-frame-answer-button"), 2).await;
+        let is_join = self.selenium_wrapper.check_if_element_exists(By::ClassName("uu-coursekit-question-t06-white-frame-answer-button"), 2).await;
+        let is_order = self.selenium_wrapper.check_if_element_exists(By::ClassName("uu-coursekit-question-t09-answer-option"), 2).await;
+        let is_order_alt = self.selenium_wrapper.check_if_element_exists(By::ClassName("uu-coursekit-question-t08-answer-option"), 2).await;
+        let is_fill_in_multiple = self.selenium_wrapper.check_if_element_exists(By::ClassName("uu-coursekit-question-t11-task-replacement-button"), 2).await;
 
         println!("result {} {} {}", is_single_select.to_string(), is_mutli_choice.to_string(), is_fill_in_sentence.to_string());
         if is_single_select as u8 + is_mutli_choice as u8 + is_fill_in_sentence as u8 > 1 {
@@ -134,6 +137,8 @@ impl UnicornTestGatherer{
             return UnicornQuestionType::ORDER_ANSWERS;
         }else if is_order_alt{
             return UnicornQuestionType::ORDER_ALT_ANSWERS;
+        }else if is_fill_in_multiple{
+            return UnicornQuestionType::FILL_IN_MULTIPLE_ANSWER;
         }
 
         todo!("beams");
@@ -143,22 +148,22 @@ impl UnicornTestGatherer{
     // pass functions
     async fn pass_select_correct_answer_question(&mut self){
         self.selenium_wrapper.click_element_from_batch(By::ClassName("uu-coursekit-question-t02-white-frame-answer-button"), 0).await;
-        self.selenium_wrapper.click_element_from_batch(By::ClassName("uu-coursekit-rounded-button-large"),1).await;
+           self.selenium_wrapper.click_element_from_batch(By::ClassName("uu5-bricks-button-xl"),1).await;
     }
 
     async fn pass_mark_correct_answers_question(&mut self) {
         self.selenium_wrapper.click_element(By::ClassName("uu-coursekit-question-t03-white-frame-answer-button")).await;
-        self.selenium_wrapper.click_element_from_batch(By::ClassName("uu-coursekit-rounded-button-large"),1).await;
+           self.selenium_wrapper.click_element_from_batch(By::ClassName("uu5-bricks-button-xl"),1).await;
     }
 
     async fn pass_fill_in_sentence_question(&mut self) {
         self.selenium_wrapper.click_element_from_batch(By::ClassName("uu-coursekit-question-t01-white-frame-answer-button"), 0).await;
-        self.selenium_wrapper.click_element_from_batch(By::ClassName("uu-coursekit-rounded-button-large"),1).await;
+           self.selenium_wrapper.click_element_from_batch(By::ClassName("uu5-bricks-button-xl"),1).await;
     }
 
     async fn pass_yes_no_question(&mut self) {
         self.selenium_wrapper.click_element_from_batch(By::ClassName("uu-coursekit-question-t10-white-frame-answer-button"), 0).await;
-        self.selenium_wrapper.click_element_from_batch(By::ClassName("uu-coursekit-rounded-button-large"),1).await;
+           self.selenium_wrapper.click_element_from_batch(By::ClassName("uu5-bricks-button-xl"),1).await;
     }
 
     async fn pass_join_question(&mut self) {
@@ -201,7 +206,7 @@ impl UnicornTestGatherer{
         }
 
 
-        self.selenium_wrapper.click_element_from_batch(By::ClassName("uu-coursekit-rounded-button-large"),1).await;
+           self.selenium_wrapper.click_element_from_batch(By::ClassName("uu5-bricks-button-xl"),1).await;
     }
 
 
@@ -212,7 +217,7 @@ impl UnicornTestGatherer{
             button.click().await.unwrap();
         }
 
-        self.selenium_wrapper.click_element_from_batch(By::ClassName("uu-coursekit-rounded-button-large"),1).await;
+           self.selenium_wrapper.click_element_from_batch(By::ClassName("uu5-bricks-button-xl"),1).await;
     }
 
     async fn pass_order_alt_question(&mut self) {
@@ -224,7 +229,22 @@ impl UnicornTestGatherer{
             button.click().await.unwrap();
         }
 
-        self.selenium_wrapper.click_element_from_batch(By::ClassName("uu-coursekit-rounded-button-large"),1).await;
+        self.selenium_wrapper.click_element_from_batch(By::ClassName("uu5-bricks-button-xl"),1).await;
+    }
+
+    async fn pass_fill_in_multiple_question(&mut self){
+        let fill_in_buttons = self.selenium_wrapper.get_elements(By::ClassName("uu-coursekit-question-t11-task-replacement-button")).await.unwrap();
+
+        for button in fill_in_buttons {
+            button.click().await.unwrap();
+
+            // click random answer button
+            let answers = self.selenium_wrapper.get_elements(By::ClassName("uu-coursekit-question-t11-white-frame-answer-button")).await.unwrap();
+            answers.first().unwrap().click().await.unwrap();
+
+
+        }
+        self.selenium_wrapper.click_element_from_batch(By::ClassName("uu5-bricks-button-xl"),1).await;
     }
 
     // solution loggers
@@ -313,6 +333,23 @@ impl UnicornTestGatherer{
         let mut answers: Vec<String> = Vec::new();
         for answer_element in answer_elements {
             if answer_element.tag_name().await.unwrap() != "div" || answers.contains(&answer_element.text().await.unwrap()) {
+                continue;
+            } 
+            answers.push(answer_element.text().await.unwrap());
+        }
+
+        if self.solutions.add_solution(Solution::new(label, answers)) { self.gathered_information += 1; }
+    }
+
+    async fn log_fill_in_multiple_question(&mut self, is_correct: bool, element: &WebElement ){
+        let label = element.find(By::ClassName("uu-coursekit-dark-text")).await.unwrap().text().await.unwrap();
+
+        let answer_elements = element
+            .find_all(By::ClassName(if is_correct { "uu-coursekit-correct-state" } else { "uu-coursekit-result-state" })).await.unwrap();
+
+        let mut answers: Vec<String> = Vec::new();
+        for answer_element in answer_elements {
+            if answer_element.tag_name().await.unwrap() != "span" || answers.contains(&answer_element.text().await.unwrap()) {
                 continue;
             } 
             answers.push(answer_element.text().await.unwrap());
