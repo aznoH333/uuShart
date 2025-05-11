@@ -8,6 +8,7 @@ pub enum UnicornQuestionType {
     ORDER_ALT_ANSWERS,
     FILL_IN_MULTIPLE_ANSWER,
     JOIN_MULTI_CHOICE,
+    PICK_ONE,
 }
 
 impl UnicornQuestionType{
@@ -29,7 +30,8 @@ impl UnicornQuestionType{
 
             "b" => { return UnicornQuestionType::FILL_IN_MULTIPLE_ANSWER; }
 
-            "c" => { return UnicornQuestionType::JOIN_MULTI_CHOICE}
+            "c" => { return UnicornQuestionType::JOIN_MULTI_CHOICE; }
+            "aaaa" => { return UnicornQuestionType::PICK_ONE; } // TODO : this ultra sucks and servers no real purpose
             _ => { panic!("unknown type {}", input)}
         }
     }
@@ -45,6 +47,7 @@ impl UnicornQuestionType{
             Self::ORDER_ALT_ANSWERS => { return "a"; }
             Self::FILL_IN_MULTIPLE_ANSWER => { return "b"; }
             Self::JOIN_MULTI_CHOICE =>{return "c";}
+            Self::PICK_ONE => { return "aaaa"; }
         }
     }
 }

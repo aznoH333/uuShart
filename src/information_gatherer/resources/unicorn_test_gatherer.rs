@@ -72,6 +72,7 @@ impl UnicornTestGatherer{
             UnicornQuestionType::ORDER_ALT_ANSWERS => { self.pass_order_alt_question().await;}
             UnicornQuestionType::FILL_IN_MULTIPLE_ANSWER => { self.pass_fill_in_multiple_question().await; }
             UnicornQuestionType::JOIN_MULTI_CHOICE => { self.pass_join_multi_choice_question().await; }
+            UnicornQuestionType::PICK_ONE => {self.pass_pick_one_question().await;}
             _ => {
                 panic!("test fill failed : unknown question type");
             }
@@ -99,6 +100,7 @@ impl UnicornTestGatherer{
                 UnicornQuestionType::ORDER_ALT_ANSWERS => { self.log_order_question(is_correct, &answer).await; }
                 UnicornQuestionType::FILL_IN_MULTIPLE_ANSWER => { self.log_fill_in_multiple_question(is_correct, &answer).await; }
                 UnicornQuestionType::JOIN_MULTI_CHOICE => { self.log_join_multi_choice_question(is_correct, &answer).await; }
+                UnicornQuestionType::PICK_ONE => { self.log_pick_one_question(is_correct, &answer).await; }
                 _ => { 
                     panic!("log failed : unknown question type {}", question_type); 
                 }
@@ -120,13 +122,16 @@ impl UnicornTestGatherer{
         let is_order = self.selenium_wrapper.check_if_element_exists(By::ClassName("uu-coursekit-question-t09-answer-option"), 2).await;
         let is_order_alt = self.selenium_wrapper.check_if_element_exists(By::ClassName("uu-coursekit-question-t08-answer-option"), 2).await;
         let is_fill_in_multiple = self.selenium_wrapper.check_if_element_exists(By::ClassName("uu-coursekit-question-t11-task-replacement-button"), 2).await;
-        let is_join_multi_choice = self.selenium_wrapper.check_if_element_exists(By::ClassName("uu-coursekit-question-t07-white-frame-answer-rows"), 2).await
+        let is_join_multi_choice = self.selenium_wrapper.check_if_element_exists(By::ClassName("uu-coursekit-question-t07-white-frame-answer-rows"), 2).await;
+        let is_pick_one = self.selenium_wrapper.check_if_element_exists(By::ClassName("uu-coursekit-question-t04-white-frame-answer-border"), 2).await;
+
 
         println!("result {} {} {}", is_single_select.to_string(), is_mutli_choice.to_string(), is_fill_in_sentence.to_string());
         if is_single_select as u8 + is_mutli_choice as u8 + is_fill_in_sentence as u8 > 1 {
             panic!("indecisive question type {} {} {}", is_single_select.to_string(), is_mutli_choice.to_string(), is_fill_in_sentence.to_string());
         }
 
+        // legit grabage code
         if is_single_select {
             return UnicornQuestionType::SINGLE_CHOICE;
         }else if is_mutli_choice {
@@ -145,6 +150,8 @@ impl UnicornTestGatherer{
             return UnicornQuestionType::FILL_IN_MULTIPLE_ANSWER;
         }else if is_join_multi_choice {
             return UnicornQuestionType::JOIN_MULTI_CHOICE;
+        }else if is_pick_one {
+            return UnicornQuestionType::PICK_ONE;
         }
 
         todo!("beams");
@@ -284,6 +291,12 @@ impl UnicornTestGatherer{
         self.selenium_wrapper.click_element_from_batch(By::ClassName("uu5-bricks-button-xl"),1).await;
     }
 
+    async fn pass_pick_one_question(&mut self) {
+        self.selenium_wrapper.click_element_from_batch(By::ClassName("uu-coursekit-question-t04-white-frame-answer-border"), 0).await;
+        self.selenium_wrapper.click_element_from_batch(By::ClassName("uu5-bricks-button-xl"),1).await;
+
+    }
+
     // solution loggers
     async fn log_select_correct_answer_question(&mut self, is_correct: bool, element: &WebElement){
         let label = element.find(By::ClassName("uu-coursekit-dark-text")).await.unwrap().text().await.unwrap();
@@ -411,6 +424,10 @@ impl UnicornTestGatherer{
         }
 
         if self.solutions.add_solution(Solution::new(label, answers)) { self.gathered_information += 1; }
+    }
+
+    async fn log_pick_one_question(&mut self, is_correct: bool, element: &WebElement) {
+        // log jack shit... its a png answer anyway
     }
 
 }
