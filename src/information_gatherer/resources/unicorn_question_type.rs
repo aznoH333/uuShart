@@ -44,6 +44,7 @@ impl UnicornQuestionType{
             Self::ORDER_ANSWERS => { return "Penis"; }
             Self::ORDER_ALT_ANSWERS => { return "a"; }
             Self::FILL_IN_MULTIPLE_ANSWER => { return "b"; }
+            Self::JOIN_MULTI_CHOICE =>{return "c";}
         }
     }
 }

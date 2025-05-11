@@ -3,7 +3,7 @@ use std::{collections::HashMap, thread, time::Duration};
 use async_trait::async_trait;
 use thirtyfour::{By, WebElement};
 
-use crate::{information_gatherer::{information_gatherer::InformationGatherer, information_resource::InformationResource}, selenium_wrapper::unicorn_selenium_wrapper::UnicornSeleniumWrapper, solutions::{solution::Solution, solution_collection::SolutionCollection}};
+use crate::{information_gatherer::{information_gatherer::InformationGatherer, information_resource::InformationResource}, selenium_wrapper::{self, unicorn_selenium_wrapper::UnicornSeleniumWrapper}, solutions::{solution::Solution, solution_collection::SolutionCollection}};
 
 use super::unicorn_question_type::UnicornQuestionType;
 
@@ -71,6 +71,7 @@ impl UnicornTestGatherer{
             UnicornQuestionType::ORDER_ANSWERS => { self.pass_order_question().await; }
             UnicornQuestionType::ORDER_ALT_ANSWERS => { self.pass_order_alt_question().await;}
             UnicornQuestionType::FILL_IN_MULTIPLE_ANSWER => { self.pass_fill_in_multiple_question().await; }
+            UnicornQuestionType::JOIN_MULTI_CHOICE => { self.pass_join_multi_choice_question().await; }
             _ => {
                 panic!("test fill failed : unknown question type");
             }
@@ -97,6 +98,7 @@ impl UnicornTestGatherer{
                 UnicornQuestionType::ORDER_ANSWERS => { self.log_order_question(is_correct, &answer).await; }
                 UnicornQuestionType::ORDER_ALT_ANSWERS => { self.log_order_question(is_correct, &answer).await; }
                 UnicornQuestionType::FILL_IN_MULTIPLE_ANSWER => { self.log_fill_in_multiple_question(is_correct, &answer).await; }
+                UnicornQuestionType::JOIN_MULTI_CHOICE => { self.log_join_multi_choice_question(is_correct, &answer).await; }
                 _ => { 
                     panic!("log failed : unknown question type {}", question_type); 
                 }
@@ -108,6 +110,7 @@ impl UnicornTestGatherer{
         self.selenium_wrapper.go_to(self.information_resource.get_resource()).await;
     }
 
+    // TODO : this shit fucking sucks, but i dont care enough to rewrite it
     async fn determine_question_type(&mut self) -> UnicornQuestionType{
         let is_single_select = self.selenium_wrapper.check_if_element_exists_and_is_clickable(By::ClassName("uu-coursekit-question-t02-white-frame-answer-button"), 10).await;
         let is_mutli_choice = self.selenium_wrapper.check_if_element_exists_and_is_clickable(By::ClassName("uu-coursekit-question-t03-white-frame-answer-button"), 2).await;
@@ -117,6 +120,7 @@ impl UnicornTestGatherer{
         let is_order = self.selenium_wrapper.check_if_element_exists(By::ClassName("uu-coursekit-question-t09-answer-option"), 2).await;
         let is_order_alt = self.selenium_wrapper.check_if_element_exists(By::ClassName("uu-coursekit-question-t08-answer-option"), 2).await;
         let is_fill_in_multiple = self.selenium_wrapper.check_if_element_exists(By::ClassName("uu-coursekit-question-t11-task-replacement-button"), 2).await;
+        let is_join_multi_choice = self.selenium_wrapper.check_if_element_exists(By::ClassName("uu-coursekit-question-t07-white-frame-answer-rows"), 2).await
 
         println!("result {} {} {}", is_single_select.to_string(), is_mutli_choice.to_string(), is_fill_in_sentence.to_string());
         if is_single_select as u8 + is_mutli_choice as u8 + is_fill_in_sentence as u8 > 1 {
@@ -139,6 +143,8 @@ impl UnicornTestGatherer{
             return UnicornQuestionType::ORDER_ALT_ANSWERS;
         }else if is_fill_in_multiple{
             return UnicornQuestionType::FILL_IN_MULTIPLE_ANSWER;
+        }else if is_join_multi_choice {
+            return UnicornQuestionType::JOIN_MULTI_CHOICE;
         }
 
         todo!("beams");
@@ -247,6 +253,37 @@ impl UnicornTestGatherer{
         self.selenium_wrapper.click_element_from_batch(By::ClassName("uu5-bricks-button-xl"),1).await;
     }
 
+
+    async fn pass_join_multi_choice_question(&mut self) {
+
+        let elements = self.selenium_wrapper.get_elements(By::ClassName("uu-coursekit-question-t07-white-frame-answer-rows")).await.unwrap();
+        let parent_element = elements.get(1).unwrap();
+
+        let inner_parent_html = parent_element.inner_html().await.unwrap();
+        // TODO : investigate screenshoting as a replacement for logging functions 🤔
+        let children = parent_element.find_all(By::ClassName("uu5-common-div")).await.unwrap();
+
+        // async filter not supported??
+        let mut filtered_children = Vec::new();
+        for child in children {
+            if child.parent().await.unwrap().inner_html().await.unwrap() == inner_parent_html {
+                filtered_children.push(child);
+            }
+        }
+
+
+
+        let answer_count = filtered_children.get(0).unwrap().find_all(By::ClassName("uu-coursekit-question-t07-white-frame-answer-button")).await.unwrap().iter().count();
+
+        for _ in 0..answer_count {
+            for _ in &filtered_children {
+                self.selenium_wrapper.click_element_from_batch(By::ClassName("uu-coursekit-question-t07-white-frame-answer-button"), 0).await;
+            }
+        }
+
+        self.selenium_wrapper.click_element_from_batch(By::ClassName("uu5-bricks-button-xl"),1).await;
+    }
+
     // solution loggers
     async fn log_select_correct_answer_question(&mut self, is_correct: bool, element: &WebElement){
         let label = element.find(By::ClassName("uu-coursekit-dark-text")).await.unwrap().text().await.unwrap();
@@ -342,6 +379,24 @@ impl UnicornTestGatherer{
     }
 
     async fn log_fill_in_multiple_question(&mut self, is_correct: bool, element: &WebElement ){
+        let label = element.find(By::ClassName("uu-coursekit-dark-text")).await.unwrap().text().await.unwrap();
+
+        let answer_elements = element
+            .find_all(By::ClassName(if is_correct { "uu-coursekit-correct-state" } else { "uu-coursekit-result-state" })).await.unwrap();
+
+        let mut answers: Vec<String> = Vec::new();
+        for answer_element in answer_elements {
+            if answer_element.tag_name().await.unwrap() != "span" || answers.contains(&answer_element.text().await.unwrap()) {
+                continue;
+            } 
+            answers.push(answer_element.text().await.unwrap());
+        }
+
+        if self.solutions.add_solution(Solution::new(label, answers)) { self.gathered_information += 1; }
+    }
+
+    async fn log_join_multi_choice_question(&mut self, is_correct: bool, element: &WebElement){
+
         let label = element.find(By::ClassName("uu-coursekit-dark-text")).await.unwrap().text().await.unwrap();
 
         let answer_elements = element
